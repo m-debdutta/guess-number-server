@@ -16,15 +16,17 @@ const generateMessage = () => {
 }
 
 const checkGuess = (secretNumber, guessedNumber) => {
-  const result = { isWon: false, isGreater: false, isSmaller: false };
+  const result = { isWon: false, isBigger: false, isSmaller: false };
   if (secretNumber === guessedNumber) result.isWon = true;
-  if (guessedNumber > secretNumber) result.isGreater = true;
+  if (guessedNumber > secretNumber) result.isBigger = true;
   if (guessedNumber < secretNumber) result.isSmaller = true;
 
   return result;
 }
 
 server.on('connection', (socket) => {
+  console.log('connection established');
+
   const secretNumber = 5;
   let remainingAttempts = 5;
   const message = generateMessage();
