@@ -34,17 +34,17 @@ server.on('connection', (socket) => {
 
   socket.on('data', (number) => {
     const guessedNumber = parseInt(number);
-
-    if (guessedNumber === secretNumber) {
-      socket.write('Congratulations! you won!!' + NEWLINE);
-      socket.end();
-      return;
-    }
     
     if (guessedNumber) {
       const guessResult = checkGuess(secretNumber, guessedNumber);
       socket.write(JSON.stringify(guessResult) + NEWLINE);
       remainingAttempts -= 1;
+    }
+
+    if (guessedNumber === secretNumber) {
+      socket.write('Congratulations! you won!!' + NEWLINE);
+      socket.end();
+      return;
     }
 
     if (remainingAttempts === 0) {
