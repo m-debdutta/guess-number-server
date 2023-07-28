@@ -1,3 +1,5 @@
+const net = require('node:net');
+
 class GuessingAssistant {
   #minNumber;
   #maxNumber;
@@ -5,31 +7,36 @@ class GuessingAssistant {
   constructor({ min, max }) {
     this.#minNumber = min;
     this.#maxNumber = max;
+    this.#currentGuess = 0;
   }
 
-  #guessNumberWithin(a, b) {
-    this.#currentGuess = Math.round((a - b) / 2);
-  }
-
-  start() {
-    this.#guessNumberWithin(this.#maxNumber, this.#minNumber);
-  }
-
-  #guessSmallerNumber() {
-    this.#guessNumberWithin(this.#currentGuess, this.#minNumber);
-  }
-
-  #guessBiggerNumber() {
-    this.#guessNumberWithin(this.#maxNumber, this.#currentGuess);
-  }
-
-  guess({ isGreater, isSmaller, isAccurate }) {
-    if (isAccurate) return;
-    if (isGreater) this.#guessSmallerNumber();
-    if (isSmaller) this.#guessBiggerNumber();
-  }
-
-  get currentGuess() {
+  guess() {
+    this.#currentGuess = Math.round((this.#maxNumber + this.#minNumber) / 2);
     return this.#currentGuess;
   }
+
+  previousGuessResult({ isBigger, isSmaller }) {
+    if (isSmaller) this.#minNumber = this.#currentGuess;
+    if (isBigger) this.#maxNumber = this.#currentGuess;
+  }
 }
+
+const main = () => {
+  const client = net.createConnection(8000);
+  const guessingAssistant = new GuessingAssistant({ min: 1, max: 50 });
+  client.setEncoding('utf-8');
+  
+  client.on('connect', () => {
+    client.write(guessingAssistant.guess().toString());
+  });
+
+  client.on('data', (hint) => {
+    // console.log(hint);
+    const guessResult = JSON.parse(hint);
+    guessingAssistant.previousGuessResult(guessResult);
+    client.write(guessingAssistant.guess().toString());
+    console.log(guessingAssistant.guess());
+  });
+};
+
+main();
