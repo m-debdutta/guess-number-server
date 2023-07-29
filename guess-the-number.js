@@ -2,14 +2,14 @@ const net = require('node:net');
 
 const NEWLINE = '\n';
 
-const generateWelcomeMessage = () => {
+const generateWelcomeMessage = (maxAttempts, minNumber, maxNumber) => {
   let message = '';
   message += NEWLINE;
   message += 'Welcome to my Guessing Game !';
   message += NEWLINE;
-  message += 'Guess a number from 1 to 50';
+  message += `Guess a number from ${minNumber} to ${maxNumber}`;
   message += NEWLINE;
-  message += 'You have only 5 chances.';
+  message += `You have only ${maxAttempts} chances.`;
   message += NEWLINE;
   message += NEWLINE;
 
@@ -25,61 +25,61 @@ const checkGuess = (secretNumber, guessedNumber) => {
   return result;
 }
 
-const generateHint = (result) => {
-  return result.isBigger ? 'Number is bigger' : 'Number is smaller';
-}
-
-const runGuessingGame = (socket, secretNumber, guessedNumber, remainingAttempts) => {
+const runGuessingGame = ({ secretNumber, guessedNumber, remainingAttempts }) => {
+  const gameStats = { isWon: false, isGameOver: false };
 
   if (guessedNumber === secretNumber) {
-    console.log('Congratulations! you won!!' + NEWLINE);
-    console.log('Secret number is: ' + secretNumber + NEWLINE);
-    socket.end();
-    return;
+    gameStats.isWon = true;
+    gameStats.isGameOver = true;
+    return gameStats;
   }
 
-  if (guessedNumber) {
-    const guessResult = checkGuess(secretNumber, guessedNumber);
-    console.log(generateHint(guessResult));
-    socket.write(JSON.stringify(guessResult) + NEWLINE);
-    remainingAttempts -= 1;
-  }
+  if (remainingAttempts === 0) gameStats.isGameOver = true;
 
-  if (remainingAttempts === 0) {
-    console.log('Oops! You loose!!' + NEWLINE);
-    console.log('Secret number is: ' + secretNumber + NEWLINE);
-    socket.end();
-    return;
-  }
+  if (guessedNumber) gameStats.hint = checkGuess(secretNumber, guessedNumber);
+
+  return gameStats;
 }
 
 const generateSecretNumber = (lowerLimit, upperLimit) => {
   return Math.floor(Math.random() * (upperLimit - lowerLimit)) + lowerLimit;
 }
 
-const initiateGame = (server, maxAttempts, maxLimit) => {
+
+const initiateGame = (server, maxAttempts, lowerLimit, upperLimit) => {
+  const gameMessage = {};
+  gameMessage.gameInfo = generateWelcomeMessage(maxAttempts, lowerLimit, upperLimit);
+
   server.on('connection', (socket) => {
-    const secretNumber = generateSecretNumber(0, maxLimit);
+    const secretNumber = generateSecretNumber(lowerLimit, upperLimit);
     let remainingAttempts = maxAttempts;
 
-    console.log(generateWelcomeMessage());
-    // socket.write(generateWelcomeMessage());
     socket.setEncoding('utf-8');
+    socket.write(JSON.stringify(gameMessage));
 
     socket.on('data', (number) => {
       const guessedNumber = parseInt(number);
-      runGuessingGame(socket, secretNumber, guessedNumber, remainingAttempts)
-      remainingAttempts -= 1;
+      setTimeout(() => {
+        const gameStats = runGuessingGame({ secretNumber, guessedNumber, remainingAttempts });
+
+        gameStats.secretNumber = secretNumber;
+        socket.write(JSON.stringify(gameStats));
+
+        if (gameStats.isWon || gameStats.isGameOver) socket.end();
+
+        remainingAttempts -= 1;
+      }, 10);
     });
   });
 }
 
 const main = () => {
-  const maxAttempts = 5;
-  const maxLimit = 50;
+  const maxAttempts = 4;
+  const lowerLimit = 0;
+  const upperLimit = 50;
   const server = net.createServer();
   server.listen(8000);
-  initiateGame(server, maxAttempts, maxLimit);
+  initiateGame(server, maxAttempts, lowerLimit, upperLimit);
 }
 
 main();

@@ -21,21 +21,52 @@ class GuessingAssistant {
   }
 }
 
+const display = (guessStats) => {
+  if (guessStats.isWon) {
+    console.log('Congratulations! you won!!');
+    return;
+  }
+
+  if (guessStats.isGameOver) {
+    console.log('Oops! You loose!!');
+    console.log('Secret number is: ' + guessStats.secretNumber);
+    return;
+  }
+
+  if (guessStats.hint.isBigger) {
+    console.log('==> Too big');
+  }
+
+  if (guessStats.hint.isSmaller) {
+    console.log('==> Too small');
+  }
+}
+
 const main = () => {
+  // const assistantDetails = {};
   const client = net.createConnection(8000);
   const guessingAssistant = new GuessingAssistant({ min: 1, max: 50 });
   client.setEncoding('utf-8');
-  
+
   client.on('connect', () => {
     client.write(guessingAssistant.guess().toString());
   });
 
-  client.on('data', (hint) => {
-    // console.log(hint);
-    const guessResult = JSON.parse(hint);
-    guessingAssistant.previousGuessResult(guessResult);
-    client.write(guessingAssistant.guess().toString());
-    console.log(guessingAssistant.guess());
+  client.on('data', (gameDetails) => {
+    // console.log(gameDetails);
+    const gameStats = JSON.parse(gameDetails);
+    if (gameStats.gameInfo) {
+      console.log(gameStats.gameInfo);
+      return;
+    }
+
+    display(gameStats);
+
+    if (!gameStats.isGameOver) {
+      guessingAssistant.previousGuessResult(gameStats.hint);
+
+      client.write(guessingAssistant.guess().toString());
+    }
   });
 };
 
