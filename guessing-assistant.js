@@ -40,7 +40,7 @@ const display = (guessStats) => {
   if (guessStats.hint.isSmaller) {
     console.log('==> Too small');
   }
-}
+};
 
 const main = () => {
   // const assistantDetails = {};

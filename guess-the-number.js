@@ -14,7 +14,7 @@ const generateWelcomeMessage = (maxAttempts, minNumber, maxNumber) => {
   message += NEWLINE;
 
   return message;
-}
+};
 
 const checkGuess = (secretNumber, guessedNumber) => {
   const result = { isWon: false, isBigger: false, isSmaller: false };
@@ -23,7 +23,7 @@ const checkGuess = (secretNumber, guessedNumber) => {
   if (guessedNumber < secretNumber) result.isSmaller = true;
 
   return result;
-}
+};
 
 const runGuessingGame = ({ secretNumber, guessedNumber, remainingAttempts }) => {
   const gameStats = { isWon: false, isGameOver: false };
@@ -39,14 +39,14 @@ const runGuessingGame = ({ secretNumber, guessedNumber, remainingAttempts }) => 
   if (guessedNumber) gameStats.hint = checkGuess(secretNumber, guessedNumber);
 
   return gameStats;
-}
+};
 
 const generateSecretNumber = (lowerLimit, upperLimit) => {
   return Math.floor(Math.random() * (upperLimit - lowerLimit)) + lowerLimit;
-}
+};
 
 
-const initiateGame = (server, maxAttempts, lowerLimit, upperLimit) => {
+const initiateGame = ({server, maxAttempts, lowerLimit, upperLimit}) => {
   const gameMessage = {};
   gameMessage.gameInfo = generateWelcomeMessage(maxAttempts, lowerLimit, upperLimit);
 
@@ -71,7 +71,7 @@ const initiateGame = (server, maxAttempts, lowerLimit, upperLimit) => {
       }, 10);
     });
   });
-}
+};
 
 const main = () => {
   const maxAttempts = 4;
@@ -79,7 +79,7 @@ const main = () => {
   const upperLimit = 50;
   const server = net.createServer();
   server.listen(8000);
-  initiateGame(server, maxAttempts, lowerLimit, upperLimit);
-}
+  initiateGame({server, maxAttempts, lowerLimit, upperLimit});
+};
 
 main();
