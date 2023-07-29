@@ -26,15 +26,19 @@ const checkGuess = (secretNumber, guessedNumber) => {
 };
 
 const runGuessingGame = ({ secretNumber, guessedNumber, remainingAttempts }) => {
-  const gameStats = { isWon: false, isGameOver: false };
+  const gameStats = { isWon: false, isLost: false };
 
   if (guessedNumber === secretNumber) {
     gameStats.isWon = true;
-    gameStats.isGameOver = true;
+    gameStats.secretNumber = secretNumber;
     return gameStats;
   }
 
-  if (remainingAttempts === 0) gameStats.isGameOver = true;
+  if (remainingAttempts === 0) {
+    gameStats.isLost = true;
+    gameStats.secretNumber = secretNumber;
+    return gameStats;
+  }
 
   if (guessedNumber) gameStats.hint = checkGuess(secretNumber, guessedNumber);
 
@@ -46,7 +50,7 @@ const generateSecretNumber = (lowerLimit, upperLimit) => {
 };
 
 
-const initiateGame = ({server, maxAttempts, lowerLimit, upperLimit}) => {
+const initiateGame = ({ server, maxAttempts, lowerLimit, upperLimit }) => {
   const gameMessage = {};
   gameMessage.gameInfo = generateWelcomeMessage(maxAttempts, lowerLimit, upperLimit);
 
@@ -62,10 +66,10 @@ const initiateGame = ({server, maxAttempts, lowerLimit, upperLimit}) => {
       setTimeout(() => {
         const gameStats = runGuessingGame({ secretNumber, guessedNumber, remainingAttempts });
 
-        gameStats.secretNumber = secretNumber;
+        gameStats.guessedNumber = guessedNumber;
         socket.write(JSON.stringify(gameStats));
 
-        if (gameStats.isWon || gameStats.isGameOver) socket.end();
+        if (gameStats.isWon || gameStats.isLost) socket.end();
 
         remainingAttempts -= 1;
       }, 10);
@@ -79,7 +83,7 @@ const main = () => {
   const upperLimit = 50;
   const server = net.createServer();
   server.listen(8000);
-  initiateGame({server, maxAttempts, lowerLimit, upperLimit});
+  initiateGame({ server, maxAttempts, lowerLimit, upperLimit });
 };
 
 main();

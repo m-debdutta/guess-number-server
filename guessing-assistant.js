@@ -22,25 +22,26 @@ class GuessingAssistant {
 }
 
 const display = (guessStats) => {
+  console.log('Your guess: ', guessStats.guessedNumber);
+
   if (guessStats.isWon) {
     console.log('Congratulations! you won!!');
     return;
   }
 
-  if (guessStats.isGameOver) {
+  if (guessStats.isLost) {
     console.log('Oops! You loose!!');
     console.log('Secret number is: ' + guessStats.secretNumber);
     return;
   }
 
-  if (guessStats.hint.isBigger) {
-    console.log('==> Too big');
-  }
-
-  if (guessStats.hint.isSmaller) {
-    console.log('==> Too small');
+  if (guessStats.hint) {
+    const message = guessStats.hint.isBigger ? '  ==> Too big' : '  ==> Too small';
+    console.log(message, '\n');
   }
 };
+
+const isGameOver = (gameStats) => !gameStats.isWon && !gameStats.isLost;
 
 const main = () => {
   // const assistantDetails = {};
@@ -62,7 +63,7 @@ const main = () => {
 
     display(gameStats);
 
-    if (!gameStats.isGameOver) {
+    if (isGameOver(gameStats)) {
       guessingAssistant.previousGuessResult(gameStats.hint);
 
       client.write(guessingAssistant.guess().toString());
