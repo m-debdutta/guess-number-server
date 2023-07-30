@@ -21,22 +21,22 @@ class GuessingAssistant {
   }
 }
 
-const display = (guessStats) => {
-  console.log('Your guess: ', guessStats.guessedNumber);
+const display = (gameResponse) => {
+  console.log('Your guess: ', gameResponse.guessedNumber);
 
-  if (guessStats.isWon) {
+  if (gameResponse.isWon) {
     console.log('Congratulations! you won!!');
     return;
   }
 
-  if (guessStats.isLost) {
+  if (gameResponse.isLost) {
     console.log('Oops! You loose!!');
-    console.log('Secret number is: ' + guessStats.secretNumber);
+    console.log('Secret number is: ' + gameResponse.secretNumber);
     return;
   }
 
-  if (guessStats.hint) {
-    const message = guessStats.hint.isBigger ? '  ==> Too big' : '  ==> Too small';
+  if (gameResponse.hint) {
+    const message = gameResponse.hint.isBigger ? '  ==> Too big' : '  ==> Too small';
     console.log(message, '\n');
   }
 };
@@ -44,7 +44,6 @@ const display = (guessStats) => {
 const isGameOver = (gameStats) => !gameStats.isWon && !gameStats.isLost;
 
 const main = () => {
-  // const assistantDetails = {};
   const client = net.createConnection(8000);
   const guessingAssistant = new GuessingAssistant({ min: 1, max: 50 });
   client.setEncoding('utf-8');
@@ -54,17 +53,15 @@ const main = () => {
   });
 
   client.on('data', (gameDetails) => {
-    // console.log(gameDetails);
-    const gameStats = JSON.parse(gameDetails);
-    if (gameStats.gameInfo) {
-      console.log(gameStats.gameInfo);
-      return;
+    const {message, response} = JSON.parse(gameDetails);
+    if (response.remainingAttempts === 3) {
+      console.log(message.welcomingMessage);
     }
 
-    display(gameStats);
+    display(response);
 
-    if (isGameOver(gameStats)) {
-      guessingAssistant.previousGuessResult(gameStats.hint);
+    if (isGameOver(response)) {
+      guessingAssistant.previousGuessResult(response.hint);
 
       client.write(guessingAssistant.guess().toString());
     }

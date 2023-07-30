@@ -17,8 +17,7 @@ const generateWelcomeMessage = (maxAttempts, minNumber, maxNumber) => {
 };
 
 const checkGuess = (secretNumber, guessedNumber) => {
-  const result = { isWon: false, isBigger: false, isSmaller: false };
-  if (secretNumber === guessedNumber) result.isWon = true;
+  const result = { isBigger: false, isSmaller: false };
   if (guessedNumber > secretNumber) result.isBigger = true;
   if (guessedNumber < secretNumber) result.isSmaller = true;
 
@@ -51,28 +50,27 @@ const generateSecretNumber = (lowerLimit, upperLimit) => {
 
 
 const initiateGame = ({ server, maxAttempts, lowerLimit, upperLimit }) => {
-  const gameMessage = {};
-  gameMessage.gameInfo = generateWelcomeMessage(maxAttempts, lowerLimit, upperLimit);
+  const message = {};
+  message.welcomingMessage = generateWelcomeMessage(maxAttempts, lowerLimit, upperLimit);
 
   server.on('connection', (socket) => {
     const secretNumber = generateSecretNumber(lowerLimit, upperLimit);
     let remainingAttempts = maxAttempts;
 
     socket.setEncoding('utf-8');
-    socket.write(JSON.stringify(gameMessage));
-
+    
     socket.on('data', (number) => {
+      remainingAttempts -= 1;
+      
       const guessedNumber = parseInt(number);
-      setTimeout(() => {
-        const gameStats = runGuessingGame({ secretNumber, guessedNumber, remainingAttempts });
+      const response = runGuessingGame({ secretNumber, guessedNumber, remainingAttempts });
+      
+      response.remainingAttempts = remainingAttempts;
+      response.guessedNumber = guessedNumber;
+      socket.write(JSON.stringify({ response, message }));
 
-        gameStats.guessedNumber = guessedNumber;
-        socket.write(JSON.stringify(gameStats));
+      if (response.isWon || response.isLost) socket.end();
 
-        if (gameStats.isWon || gameStats.isLost) socket.end();
-
-        remainingAttempts -= 1;
-      }, 10);
     });
   });
 };
