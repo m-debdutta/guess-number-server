@@ -59,7 +59,7 @@ const initiateGame = ({ server, maxAttempts, lowerLimit, upperLimit }) => {
 
     socket.setEncoding('utf-8');
     
-    socket.on('data', (number) => {
+    socket.on('data', () => {
       remainingAttempts -= 1;
       
       const guessedNumber = parseInt(number);
@@ -76,9 +76,9 @@ const initiateGame = ({ server, maxAttempts, lowerLimit, upperLimit }) => {
 };
 
 const main = () => {
-  const maxAttempts = 4;
+  const maxAttempts = 5;
   const lowerLimit = 0;
-  const upperLimit = 50;
+  const upperLimit = 1024;
   const server = net.createServer();
   server.listen(8000);
   initiateGame({ server, maxAttempts, lowerLimit, upperLimit });

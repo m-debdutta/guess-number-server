@@ -10,8 +10,12 @@ class GuessingAssistant {
     this.#currentGuess = 0;
   }
 
+  #generatePseudoRandomNumber() {
+    this.#currentGuess = Math.floor(Math.random() * (this.#maxNumber - this.#minNumber)) + this.#minNumber;
+  }
+
   guess() {
-    this.#currentGuess = Math.round((this.#maxNumber + this.#minNumber) / 2);
+    this.#generatePseudoRandomNumber();
     return this.#currentGuess;
   }
 
@@ -45,16 +49,20 @@ const isGameOver = (gameStats) => !gameStats.isWon && !gameStats.isLost;
 
 const main = () => {
   const client = net.createConnection(8000);
-  const guessingAssistant = new GuessingAssistant({ min: 1, max: 50 });
+  const guessingAssistant = new GuessingAssistant({ min: 0, max: 1024 });
   client.setEncoding('utf-8');
+  const playerRequest = {};
 
   client.on('connect', () => {
-    client.write(guessingAssistant.guess().toString());
+    playerRequest.play = true;
+    playerRequest.guess = null;
+    client.write(JSON.stringify(playerRequest));
+    // client.write(guessingAssistant.guess().toString());
   });
 
   client.on('data', (gameDetails) => {
-    const {message, response} = JSON.parse(gameDetails);
-    if (response.remainingAttempts === 3) {
+    const { message, response } = JSON.parse(gameDetails);
+    if (response.remainingAttempts === 4) {
       console.log(message.welcomingMessage);
     }
 
